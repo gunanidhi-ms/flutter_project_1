@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_project_1/db_helper.dart';
 import '../widgets/custom_scaffold.dart';
 import 'package:flutter_project_1/user_model.dart';
+import 'package:flutter_project_1/screens/profile.dart';
 
 class LoginScreen extends StatefulWidget{
   const LoginScreen({super.key});
@@ -103,10 +104,13 @@ class _LoginScreenState extends State<LoginScreen>{
                 if(user!=null)
                 {
                    ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Login Succesfull for ${user.email}')),
+                    SnackBar(content: Text('Login Succesfull for 24{user.email}')),
                    );
                    //later will naviagte to homepage or profile page depeding upon sharvari pages
-
+                   Navigator.pushReplacement(
+                     context,
+                     MaterialPageRoute(builder: (context) => ProfilePage(user: user)),
+                   );
                 }
                   else {
                     ScaffoldMessenger.of(context).showSnackBar(

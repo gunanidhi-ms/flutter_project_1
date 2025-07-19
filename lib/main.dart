@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_project_1/screens/profile.dart';
+import 'package:flutter_project_1/user_model.dart';
 import 'screens/login.dart';
 
 void main() {
@@ -13,11 +14,13 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Flutter Demo',
+      title: 'MyProfile',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
       ),
-      home: const LoginScreen(), // Start from login
+      home: ProfilePage(
+        user: User(id: 1, email: 'test@example.com', password: 'password123'),
+      ), // Start from login
     );
   }
 }
