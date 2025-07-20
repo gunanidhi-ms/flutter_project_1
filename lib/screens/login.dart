@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_project_1/db_helper.dart';
 import '../widgets/custom_scaffold.dart';
-import 'package:flutter_project_1/user_model.dart';
-import 'package:flutter_project_1/screens/profile.dart';
+import 'signup_page.dart';
+import 'profile.dart';
+
 
 class LoginScreen extends StatefulWidget{
   const LoginScreen({super.key});
@@ -27,7 +28,7 @@ class _LoginScreenState extends State<LoginScreen>{
               style: TextStyle(
                 fontSize: 32,
                 fontWeight: FontWeight.bold,
-                color:Colors.white,
+                color:const Color.fromARGB(255, 4, 22, 58),
 
               ),
               ),
@@ -37,7 +38,7 @@ class _LoginScreenState extends State<LoginScreen>{
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
-                  color:Colors.white70,
+                  color:Colors.black,
                 ),
               ),
               const SizedBox(height:30),
@@ -104,10 +105,10 @@ class _LoginScreenState extends State<LoginScreen>{
                 if(user!=null)
                 {
                    ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Login Succesfull for 24{user.email}')),
+                    SnackBar(content: Text('Login Succesfull for ${user.email}')),
                    );
                    //later will naviagte to homepage or profile page depeding upon sharvari pages
-                   Navigator.pushReplacement(
+                  Navigator.pushReplacement(
                      context,
                      MaterialPageRoute(builder: (context) => ProfilePage(user: user)),
                    );
@@ -131,6 +132,30 @@ class _LoginScreenState extends State<LoginScreen>{
                   style: TextStyle(
                     fontSize: 16,color:Colors.white),
                   ),
+                  ),
+                  const SizedBox(height:10),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        "Don't have an account?",
+                        style:TextStyle(color:Colors.black),
+                      ),
+                      TextButton(
+                        onPressed: (){
+                          Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) =>SignupPage()),
+                          );
+                        },
+                        child: Text(
+                         "sign up",
+                         style: TextStyle(
+                          color:Colors.black,
+                          fontWeight: FontWeight.bold),
+                          ),
+                      ),
+                    ],
                   ),
           ],
 

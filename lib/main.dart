@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_project_1/screens/profile.dart';
-import 'package:flutter_project_1/user_model.dart';
 import 'screens/login.dart';
 
 void main() {
@@ -18,9 +16,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
       ),
-      home: ProfilePage(
-        user: User(id: 1, email: 'test@example.com', password: 'password123'),
-      ), // Start from login
+      home: LoginScreen(),
     );
   }
 }
