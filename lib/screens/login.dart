@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_project_1/db_helper.dart';
 import '../widgets/custom_scaffold.dart';
-import 'package:flutter_project_1/user_model.dart';
+
 
 class LoginScreen extends StatefulWidget{
   const LoginScreen({super.key});
