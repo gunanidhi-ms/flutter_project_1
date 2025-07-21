@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_project_1/db_helper.dart';
 import '../widgets/custom_scaffold.dart';
-import 'signup_page.dart';
-import 'profile.dart';
 
 
 class LoginScreen extends StatefulWidget{
@@ -28,7 +26,7 @@ class _LoginScreenState extends State<LoginScreen>{
               style: TextStyle(
                 fontSize: 32,
                 fontWeight: FontWeight.bold,
-                color:const Color.fromARGB(255, 4, 22, 58),
+                color:Colors.white,
 
               ),
               ),
@@ -38,7 +36,7 @@ class _LoginScreenState extends State<LoginScreen>{
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
-                  color:Colors.black,
+                  color:Colors.white70,
                 ),
               ),
               const SizedBox(height:30),
@@ -108,10 +106,7 @@ class _LoginScreenState extends State<LoginScreen>{
                     SnackBar(content: Text('Login Succesfull for ${user.email}')),
                    );
                    //later will naviagte to homepage or profile page depeding upon sharvari pages
-                  Navigator.pushReplacement(
-                     context,
-                     MaterialPageRoute(builder: (context) => ProfilePage(user: user)),
-                   );
+
                 }
                   else {
                     ScaffoldMessenger.of(context).showSnackBar(
@@ -132,30 +127,6 @@ class _LoginScreenState extends State<LoginScreen>{
                   style: TextStyle(
                     fontSize: 16,color:Colors.white),
                   ),
-                  ),
-                  const SizedBox(height:10),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        "Don't have an account?",
-                        style:TextStyle(color:Colors.black),
-                      ),
-                      TextButton(
-                        onPressed: (){
-                          Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) =>SignupPage()),
-                          );
-                        },
-                        child: Text(
-                         "sign up",
-                         style: TextStyle(
-                          color:Colors.black,
-                          fontWeight: FontWeight.bold),
-                          ),
-                      ),
-                    ],
                   ),
           ],
 

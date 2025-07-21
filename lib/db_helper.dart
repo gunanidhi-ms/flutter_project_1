@@ -87,14 +87,4 @@ class DBHelper {
     }
     return null;
   }
-
-  // Delete a user by email
-  Future<int> deleteUser(String email) async {
-    final db = await database;
-    return await db.delete(
-      'users',
-      where: 'email = ?',
-      whereArgs: [email],
-    );
-  }
 }

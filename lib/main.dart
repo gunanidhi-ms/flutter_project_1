@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'screens/signup_page.dart';
 import 'screens/login.dart';
 
 void main() {
@@ -12,11 +13,11 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'MyProfile',
+      title: 'Flutter Demo',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
       ),
-      home: LoginScreen(),
+      home: const SignupPage(), // Start from login
     );
   }
 }
