@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../widgets/custom_scaffold.dart';
-import 'package:flutter_project_1/screens/services/password_service.dart';
-import 'package:flutter_project_1/screens/services/location_service.dart';
-import 'package:flutter_project_1/screens/services/email_validator_service.dart';
+import 'services/password_service.dart';
+import 'services/location_service.dart';
+import 'services/email_validator_service.dart';
 import 'package:flutter_project_1/user_model.dart';
 import 'package:flutter_project_1/db_helper.dart';
 import 'login.dart';
@@ -51,12 +51,10 @@ class _SignupPageState extends State<SignupPage> {
   List<String> cities = [];
 
   String? selectedDial;
-  String? selectedDialCountry;
   String? selectedCountry;
   String? selectedState;
   String? selectedCity;
     String? _emailError;
-  String? _mobileError;
 
   bool isLoadingCountries = true;
   bool isLoadingStates = false;
@@ -170,35 +168,15 @@ class _SignupPageState extends State<SignupPage> {
       return;
     }
 
-    // Mobile validation
-    if (_mobileController.text.trim().length != 10) {
-      setState(() {
-        _mobileError = 'Mobile number must be 10 digits';
-      });
-      _scrollToField('mobile');
-      _showMessage('Mobile number must be 10 digits');
-      return;
-    }
-    setState(() {
-      _mobileError = null;
-    });
 
 
-    // Parse dial code and country from selectedDial
-    String dialCode = '';
-    String dialCountry = '';
-    if (selectedDial != null && selectedDial!.contains('|')) {
-      final parts = selectedDial!.split('|');
-      dialCountry = parts[0];
-      dialCode = parts[1];
-    }
 
     final newUser = User(
       firstName: _firstnameController.text.trim(),
       middleName: _middlenameController.text.trim(),
       lastName: _lastnameController.text.trim(),
       email: _emailController.text.trim(),
-      dialCode: dialCode,
+      dialCode: selectedDial!,
       mobileNumber: _mobileController.text.trim(),
       password: _passwordController.text.trim(),
       country: selectedCountry!,
@@ -345,15 +323,15 @@ class _SignupPageState extends State<SignupPage> {
                           hint: const Text('Dial Code'),
                           value: selectedDial,
                           isExpanded: true,
-                          items: _dialCodesList.map((item) {
-                            final uniqueValue = '${item['name']}|${item['dial_code']}';
-                            return DropdownMenuItem<String>(
-                              value: uniqueValue,
-                              child: Text(
-                                '${item['name']} (${item['dial_code']})',
-                              ),
-                            );
-                          }).toList(),
+                          items:
+                              _dialCodesList.map((item) {
+                                return DropdownMenuItem<String>(
+                                  value: item['dial_code'],
+                                  child: Text(
+                                    '${item['name']} (${item['dial_code']})',
+                                  ),
+                                );
+                              }).toList(),
                           onChanged: (value) {
                             setState(() {
                               selectedDial = value!;
@@ -371,10 +349,9 @@ class _SignupPageState extends State<SignupPage> {
                         keyboardType: TextInputType.number,
                         inputFormatters: <TextInputFormatter>[
                           FilteringTextInputFormatter.digitsOnly,
-                          LengthLimitingTextInputFormatter(10),
                         ],
                         key: _fieldKeys['mobile'],
-                        decoration: buildInputDecoration('Mobile Number', errorText: _mobileError),
+                        decoration: buildInputDecoration('Mobile Number'),
                       ),
                     ),
                   ],
@@ -579,4 +556,3 @@ class _SignupPageState extends State<SignupPage> {
     );
   }
 }
-
