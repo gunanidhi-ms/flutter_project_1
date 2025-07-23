@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_project_1/screens/utils.dart';
 import '../widgets/custom_scaffold.dart';
-import 'services/password_service.dart';
-import 'services/location_service.dart';
-import 'services/email_validator_service.dart';
+import 'package:flutter_project_1/screens/services/password_service.dart';
+import 'package:flutter_project_1/screens/services/location_service.dart';
 import 'package:flutter_project_1/user_model.dart';
 import 'package:flutter_project_1/db_helper.dart';
 import 'login.dart';
@@ -43,6 +43,7 @@ class _SignupPageState extends State<SignupPage> {
     'country': GlobalKey(),
     'state': GlobalKey(),
     'city': GlobalKey(),
+    'dial_code': GlobalKey(),
   };
 
   List<Map<String, String>> _dialCodesList = [];
@@ -51,15 +52,16 @@ class _SignupPageState extends State<SignupPage> {
   List<String> cities = [];
 
   String? selectedDial;
+  String? selectedDialCountry;
   String? selectedCountry;
   String? selectedState;
   String? selectedCity;
-    String? _emailError;
+  String? _emailError;
+  String? _mobileError;
 
   bool isLoadingCountries = true;
   bool isLoadingStates = false;
   bool isLoadingCities = false;
-
 
   @override
   void initState() {
@@ -156,27 +158,24 @@ class _SignupPageState extends State<SignupPage> {
       }
     }
 
-    if (_emailError == 'Email already registered'){
+    if (_emailError == 'Email already registered') {
       _scrollToField('email');
       _showMessage('Email already registered');
       return;
     }
 
-    if (_passwordMatchError==true) {
+    if (_passwordMatchError == true) {
       _scrollToField('confirm_password');
       _showMessage('Passwords do not match');
       return;
     }
-
-
-
 
     final newUser = User(
       firstName: _firstnameController.text.trim(),
       middleName: _middlenameController.text.trim(),
       lastName: _lastnameController.text.trim(),
       email: _emailController.text.trim(),
-      dialCode: selectedDial!,
+      dialCode: selectedDial ?? '',
       mobileNumber: _mobileController.text.trim(),
       password: _passwordController.text.trim(),
       country: selectedCountry!,
@@ -188,7 +187,6 @@ class _SignupPageState extends State<SignupPage> {
     );
 
     await DBHelper().insertUser(newUser);
-
     _showMessage("Account created successfully!!... Redirecting to login page");
 
     Navigator.pushReplacement(
@@ -198,7 +196,7 @@ class _SignupPageState extends State<SignupPage> {
   }
 
   void _emailValidate(String email) async {
-    if (!EmailValidatorService.isEmailValid(email)) {
+    if (getEmailValidationError(email)) {
       setState(() => _emailError = 'Please enter a valid email address');
       return;
     }
@@ -234,25 +232,7 @@ class _SignupPageState extends State<SignupPage> {
     ).showSnackBar(SnackBar(content: Text(message)));
   }
 
-  InputDecoration buildInputDecoration(
-    String label, {
-    Widget? suffixIcon,
-    String? errorText,
-  }) {
-    return InputDecoration(
-      labelText: label,
-      filled: true,
-      fillColor: Colors.white70,
-      contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 12),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(10),
-        borderSide: BorderSide.none,
-      ),
-      suffixIcon: suffixIcon,
-      errorText: errorText,
-    );
-  }
-
+  @override
   Widget build(BuildContext context) {
     return CustomScaffold(
       child: Padding(
@@ -264,52 +244,44 @@ class _SignupPageState extends State<SignupPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Create Account',
-                  style: TextStyle(
-                    fontSize: 32,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
+                buildText('Create Account'),
                 const SizedBox(height: 20),
 
-                TextField(
-                  controller: _firstnameController,
-                  key: _fieldKeys['firstname'],
-                  decoration: buildInputDecoration('First Name'),
+                buildCustomTextField(
+                  _firstnameController,
+                  _fieldKeys['firstname'],
+                  'First Name',
                 ),
                 const SizedBox(height: 20),
 
                 Row(
                   children: [
                     Expanded(
-                      child: TextField(
-                        controller: _middlenameController,
-                        key: _fieldKeys['middlename'],
-                        decoration: buildInputDecoration('Middle Name'),
+                      child: buildCustomTextField(
+                        _middlenameController,
+                        _fieldKeys['middlename'],
+                        'Middle Name',
                       ),
                     ),
                     const SizedBox(width: 8),
                     Expanded(
-                      child: TextField(
-                        controller: _lastnameController,
-                        key: _fieldKeys['lastname'],
-                        decoration: buildInputDecoration('Last Name'),
+                      child: buildCustomTextField(
+                        _lastnameController,
+                        _fieldKeys['lastname'],
+                        'Last Name',
                       ),
                     ),
                   ],
                 ),
                 const SizedBox(height: 20),
 
-                TextField(
-                  controller: _emailController,
-                  key: _fieldKeys['email'],
-                  decoration: buildInputDecoration(
-                    'Email',
-                    errorText: _emailError,
-                  ),
-                  onChanged: (value) {_emailValidate(value);},
+                buildCustomTextField(
+                  _emailController,
+                  _fieldKeys['email'],
+                  'Email',
+                  errorText: _emailError,
+                  keyboardType: TextInputType.emailAddress,
+                  onChanged: _emailValidate,
                 ),
                 const SizedBox(height: 20),
 
@@ -317,41 +289,38 @@ class _SignupPageState extends State<SignupPage> {
                   children: [
                     Expanded(
                       flex: 3, // Smaller width for dial code
-                      child: DropdownButtonHideUnderline(
-                        child: DropdownButton<String>(
-                          key: _fieldKeys['dial_code'],
-                          hint: const Text('Dial Code'),
-                          value: selectedDial,
-                          isExpanded: true,
-                          items:
-                              _dialCodesList.map((item) {
-                                return DropdownMenuItem<String>(
-                                  value: item['dial_code'],
-                                  child: Text(
-                                    '${item['name']} (${item['dial_code']})',
-                                  ),
-                                );
-                              }).toList(),
-                          onChanged: (value) {
-                            setState(() {
-                              selectedDial = value!;
-                            });
-                          },
-                        ),
+                      child: buildCustomDropdown(
+                        _fieldKeys['dial_code'],
+                        selectedDial,
+                        _dialCodesList.map((item) {
+                          return DropdownMenuItem<String>(
+                            value: item['dial_code'],
+                            child: Text(
+                              '${item['name']} (${item['dial_code']})',
+                            ),
+                          );
+                        }).toList(),
+                        'Dial Code',
+                        (value) {
+                          setState(() => selectedDial = value);
+                        },
+                        useFormField: false,
+                        hideUnderline: true,
                       ),
                     ),
                     const SizedBox(width: 8),
 
                     Expanded(
                       flex: 6, // More width for mobile number
-                      child: TextField(
-                        controller: _mobileController,
-                        keyboardType: TextInputType.number,
-                        inputFormatters: <TextInputFormatter>[
+                      child: buildCustomTextField(
+                        _mobileController,
+                        _fieldKeys['mobile'],
+                        'Mobile Number',
+                        errorText: _mobileError,
+                        keyboardType: TextInputType.phone,
+                        inputFormatters: [
                           FilteringTextInputFormatter.digitsOnly,
                         ],
-                        key: _fieldKeys['mobile'],
-                        decoration: buildInputDecoration('Mobile Number'),
                       ),
                     ),
                   ],
@@ -359,25 +328,22 @@ class _SignupPageState extends State<SignupPage> {
 
                 const SizedBox(height: 20),
 
-                TextField(
-                  controller: _passwordController,
-                  key: _fieldKeys['password'],
+                buildCustomTextField(
+                  _passwordController,
+                  _fieldKeys['password'],
+                  'Password',
                   obscureText: _obscurePassword,
-                  decoration: buildInputDecoration(
-                    'Password',
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        _obscurePassword
-                            ? Icons.visibility
-                            : Icons.visibility_off,
-                      ),
-                      onPressed: () {
-                        setState(() => _obscurePassword = !_obscurePassword);
-                      },
-                    ),
-                    errorText: _passwordFailures.isNotEmpty ? '' : null,
-                  ),
-                  onChanged: _checkPasswordRequirement,
+                  errorText: _passwordFailures.isNotEmpty ? '' : null,
+                  suffixIconData:
+                      _obscurePassword
+                          ? Icons.visibility_off
+                          : Icons.visibility,
+                  onPressed: () {
+                    setState(() => _obscurePassword = !_obscurePassword);
+                  },
+                  onChanged: (value) {
+                    _checkPasswordRequirement(value);
+                  },
                 ),
                 const SizedBox(height: 2),
                 if (_passwordFailures.isNotEmpty)
@@ -393,61 +359,48 @@ class _SignupPageState extends State<SignupPage> {
                   ),
                 const SizedBox(height: 20),
 
-                TextField(
-                  controller: _confirmPasswordController,
-                  key: _fieldKeys['confirm_password'],
+                buildCustomTextField(
+                  _confirmPasswordController,
+                  _fieldKeys['confirm_password'],
+                  'Confirm Password',
                   obscureText: _obscureConfirmPassword,
-                  decoration: buildInputDecoration(
-                    'Confirm Password',
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        _obscureConfirmPassword
-                            ? Icons.visibility
-                            : Icons.visibility_off,
-                      ),
-                      onPressed: () {
-                        setState(
-                          () =>
-                              _obscureConfirmPassword =
-                                  !_obscureConfirmPassword,
-                        );
-                      },
-                    ),
-                    errorText:
-                        _passwordMatchError ? 'Passwords do not match' : null,
-                  ),
+                  errorText:
+                      _passwordMatchError ? 'Passwords do not match' : null,
+                  suffixIconData:
+                      _obscureConfirmPassword
+                          ? Icons.visibility_off
+                          : Icons.visibility,
+                  onPressed: () {
+                    setState(
+                      () => _obscureConfirmPassword = !_obscureConfirmPassword,
+                    );
+                  },
                   onChanged: (value) {
                     setState(() {
-                      _passwordMatchError = value != _passwordController.text;
+                      _passwordMatchError =
+                          value != _passwordController.text.trim();
                     });
                   },
                 ),
                 const SizedBox(height: 20),
 
-                const Text(
-                  'Address',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
+                buildText('Address'),
                 const SizedBox(height: 20),
 
                 Row(
                   children: [
                     Expanded(
-                      child: DropdownButtonFormField<String>(
-                        isExpanded: true,
-                        key: _fieldKeys['country'],
-                        value: selectedCountry,
-                        items:
-                            countries
-                                .map(
-                                  (country) => DropdownMenuItem(
-                                    value: country,
-                                    child: Text(country),
-                                  ),
-                                )
-                                .toList(),
-                        decoration: buildInputDecoration('Country'),
-                        onChanged: (value) async {
+                      child: buildCustomDropdown(
+                        _fieldKeys['country'],
+                        selectedCountry,
+                        countries.map((country) {
+                          return DropdownMenuItem<String>(
+                            value: country,
+                            child: Text(country),
+                          );
+                        }).toList(),
+                        'Country',
+                        (value) async {
                           setState(() {
                             selectedCountry = value;
                           });
@@ -457,21 +410,17 @@ class _SignupPageState extends State<SignupPage> {
                     ),
                     const SizedBox(width: 8),
                     Expanded(
-                      child: DropdownButtonFormField<String>(
-                        isExpanded: true,
-                        key: _fieldKeys['state'],
-                        value: selectedState,
-                        items:
-                            states
-                                .map(
-                                  (state) => DropdownMenuItem(
-                                    value: state,
-                                    child: Text(state),
-                                  ),
-                                )
-                                .toList(),
-                        decoration: buildInputDecoration('State'),
-                        onChanged: (value) async {
+                      child: buildCustomDropdown(
+                        _fieldKeys['state'],
+                        selectedState,
+                        states.map((state) {
+                          return DropdownMenuItem<String>(
+                            value: state,
+                            child: Text(state),
+                          );
+                        }).toList(),
+                        'State',
+                        (value) async {
                           setState(() {
                             selectedState = value;
                           });
@@ -484,49 +433,45 @@ class _SignupPageState extends State<SignupPage> {
                     ),
                     const SizedBox(width: 8),
                     Expanded(
-                      child: DropdownButtonFormField<String>(
-                        isExpanded: true,
-                        key: _fieldKeys['city'],
-                        value: selectedCity,
-                        items:
-                            cities
-                                .map(
-                                  (city) => DropdownMenuItem(
-                                    value: city,
-                                    child: Text(city),
-                                  ),
-                                )
-                                .toList(),
-                        decoration: buildInputDecoration('City'),
-                        onChanged: (value) {
+                      child: buildCustomDropdown(
+                        _fieldKeys['city'],
+                        selectedCity,
+                        cities.map((city) {
+                          return DropdownMenuItem<String>(
+                            value: city,
+                            child: Text(city),
+                          );
+                        }).toList(),
+                        'City',
+                        (value) {
                           setState(() {
                             selectedCity = value;
                           });
                         },
                       ),
                     ),
+                    const SizedBox(height: 20),
                   ],
                 ),
-                const SizedBox(height: 20),
-
-                TextField(
-                  controller: _houseController,
-                  key: _fieldKeys['house'],
-                  decoration: buildInputDecoration('House/Flat No.'),
+                buildCustomTextField(
+                  _houseController,
+                  _fieldKeys['house'],
+                  'House/Flat No.',
                 ),
                 const SizedBox(height: 20),
 
-                TextField(
-                  controller: _landmarkController,
-                  key: _fieldKeys['landmark'],
-                  decoration: buildInputDecoration('Landmark'),
+                buildCustomTextField(
+                  _landmarkController,
+                  _fieldKeys['landmark'],
+                  'Landmark',
                 ),
                 const SizedBox(height: 20),
 
-                TextField(
-                  controller: _pincodeController,
-                  key: _fieldKeys['pincode'],
-                  decoration: buildInputDecoration('Pincode'),
+                buildCustomTextField(
+                  _pincodeController,
+                  _fieldKeys['pincode'],
+                  'Pincode',
+                  keyboardType: TextInputType.number,
                 ),
                 const SizedBox(height: 40),
 
