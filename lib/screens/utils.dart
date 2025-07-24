@@ -1,12 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_project_1/screens/services/email_validator_service.dart';
 
-Widget buildText(
-  String text, {
-  double fontSize = 32,
-  bool isBold = true,
-}) {
+
+Widget buildText(String text, {double fontSize =32, bool isBold = true}) {
   return Text(
     text,
     style: TextStyle(
@@ -41,9 +37,10 @@ InputDecoration buildInputDecoration(
 Widget buildCustomTextField(
   TextEditingController controller,
   Key? key,
-  String label, {
+  String label,
+  String hint,{
   String? errorText,
-  bool obscureText = false, 
+  bool obscureText = false,
   Widget? prefixIcon,
   IconData? suffixIconData,
   VoidCallback? onPressed,
@@ -51,67 +48,83 @@ Widget buildCustomTextField(
   List<TextInputFormatter>? inputFormatters,
   void Function(String)? onChanged,
 }) {
-  return TextField(
-    controller: controller,
-    key: key,
-    obscureText: obscureText, 
-    decoration: buildInputDecoration(
-      label,
-      errorText: errorText,
-      prefixIcon: prefixIcon,
-      suffixIcon: suffixIconData != null
-          ? IconButton(
-              icon: Icon(suffixIconData),
-              onPressed: onPressed,
-            )
-          : null,
-    ),
-    keyboardType: keyboardType,
-    inputFormatters: inputFormatters,
-    onChanged: onChanged,
+  return Column(
+    mainAxisSize: MainAxisSize.min,
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text(
+        label,
+        style: const TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.bold,
+          color: Color.fromARGB(255, 4, 22, 58),
+        ),
+      ),
+      const SizedBox(height: 2),
+      TextField(
+        controller: controller,
+        key: key,
+        obscureText: obscureText,
+        decoration: buildInputDecoration(
+          hint,
+          errorText: errorText,
+          prefixIcon: prefixIcon,
+          suffixIcon:
+              suffixIconData != null
+                  ? IconButton(icon: Icon(suffixIconData), onPressed: onPressed)
+                  : null,
+        ),
+        keyboardType: keyboardType,
+        inputFormatters: inputFormatters,
+        onChanged: onChanged,
+      ),
+    ],
   );
 }
 
 Widget buildCustomDropdown(
   Key? key,
   String? value,
+  String label,
+  String hint,
   List<DropdownMenuItem<String>> items,
-  String hintText,
-   void Function(String?) onChanged,
-  {bool isExpanded = true,
+  void Function(String?) onChanged, {
+  bool isExpanded = true,
   bool hideUnderline = false,
   bool useFormField = true,
   String? errorText,
 }) {
   final dropdown = DropdownButton<String>(
+    padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
     key: key,
     value: value,
     items: items,
-    hint: Text(hintText),
+    hint: Text(label),
     isExpanded: isExpanded,
     onChanged: onChanged,
   );
 
-  if (!useFormField) {
-    return hideUnderline
-        ? DropdownButtonHideUnderline(child: dropdown)
-        : dropdown;
-  }
-
-  return DropdownButtonFormField<String>(
-    key: key,
-    value: value,
-    items: items,
-    decoration: buildInputDecoration(hintText, errorText: errorText),
-    isExpanded: isExpanded,
-    onChanged: onChanged,
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text(
+        label,
+        style: const TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.bold,
+          color: Color.fromARGB(255, 4, 22, 58),
+        ),
+      ),
+      const SizedBox(height: 2),
+      DropdownButtonFormField<String>(
+        key: key,
+        value: value,
+        items: items,
+        decoration: buildInputDecoration(label, errorText: errorText),
+        isExpanded: isExpanded,
+        onChanged: onChanged,
+      ),
+    ],
   );
 }
-
-
-// utils.dart
-bool getEmailValidationError(String email) {
-  return !EmailValidatorService.isEmailValid(email);
-}
-
 

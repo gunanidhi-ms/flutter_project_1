@@ -221,7 +221,6 @@ class _ProfilePageState extends State<ProfilePage> {
                   fontWeight: FontWeight.bold,
                   fontSize: 14,
                   color: Colors.deepPurple[300])),
-          SizedBox(height: 2),
           Row(
             children: [
               Expanded(

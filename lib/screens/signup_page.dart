@@ -4,6 +4,7 @@ import 'package:flutter_project_1/screens/utils.dart';
 import '../widgets/custom_scaffold.dart';
 import 'package:flutter_project_1/screens/services/password_service.dart';
 import 'package:flutter_project_1/screens/services/location_service.dart';
+import 'package:flutter_project_1/screens/services/email_validator_service.dart';
 import 'package:flutter_project_1/user_model.dart';
 import 'package:flutter_project_1/db_helper.dart';
 import 'login.dart';
@@ -158,9 +159,9 @@ class _SignupPageState extends State<SignupPage> {
       }
     }
 
-    if (_emailError == 'Email already registered') {
+    if (_emailError!= null) {
       _scrollToField('email');
-      _showMessage('Email already registered');
+      _showMessage(_emailError!);
       return;
     }
 
@@ -195,18 +196,10 @@ class _SignupPageState extends State<SignupPage> {
     );
   }
 
-  void _emailValidate(String email) async {
-    if (getEmailValidationError(email)) {
-      setState(() => _emailError = 'Please enter a valid email address');
-      return;
-    }
-
-    bool exists = await DBHelper().userExists(email);
-    if (exists) {
-      setState(() => _emailError = 'Email already registered');
-    } else {
-      setState(() => _emailError = null);
-    }
+  void _emailValidate(String email) {
+    validateEmail(email, false, (error) {
+      setState(() => _emailError = error);
+    });
   }
 
   void _scrollToField(String fieldKey) {
@@ -235,21 +228,23 @@ class _SignupPageState extends State<SignupPage> {
   @override
   Widget build(BuildContext context) {
     return CustomScaffold(
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: SingleChildScrollView(
-            controller: _scrollController,
+      child: Form(
+        key: _formKey,
+        child: SingleChildScrollView(
+          controller: _scrollController,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
             child: Column(
+              mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                buildText('Create Account'),
+                Center(child: buildText('Create Account')),
                 const SizedBox(height: 20),
 
                 buildCustomTextField(
                   _firstnameController,
                   _fieldKeys['firstname'],
+                  'First Name*',
                   'First Name',
                 ),
                 const SizedBox(height: 20),
@@ -260,6 +255,7 @@ class _SignupPageState extends State<SignupPage> {
                       child: buildCustomTextField(
                         _middlenameController,
                         _fieldKeys['middlename'],
+                        'Middle Name(optional)',
                         'Middle Name',
                       ),
                     ),
@@ -268,6 +264,7 @@ class _SignupPageState extends State<SignupPage> {
                       child: buildCustomTextField(
                         _lastnameController,
                         _fieldKeys['lastname'],
+                        'Last Name*',
                         'Last Name',
                       ),
                     ),
@@ -277,7 +274,8 @@ class _SignupPageState extends State<SignupPage> {
 
                 buildCustomTextField(
                   _emailController,
-                  _fieldKeys['email'],
+                  _fieldKeys['email*'],
+                  'Email*',
                   'Email',
                   errorText: _emailError,
                   keyboardType: TextInputType.emailAddress,
@@ -292,6 +290,8 @@ class _SignupPageState extends State<SignupPage> {
                       child: buildCustomDropdown(
                         _fieldKeys['dial_code'],
                         selectedDial,
+                        'Dial Code*',
+                        'Dial Code',
                         _dialCodesList.map((item) {
                           return DropdownMenuItem<String>(
                             value: item['dial_code'],
@@ -300,12 +300,9 @@ class _SignupPageState extends State<SignupPage> {
                             ),
                           );
                         }).toList(),
-                        'Dial Code',
                         (value) {
                           setState(() => selectedDial = value);
                         },
-                        useFormField: false,
-                        hideUnderline: true,
                       ),
                     ),
                     const SizedBox(width: 8),
@@ -315,6 +312,7 @@ class _SignupPageState extends State<SignupPage> {
                       child: buildCustomTextField(
                         _mobileController,
                         _fieldKeys['mobile'],
+                        'Mobile Number*',
                         'Mobile Number',
                         errorText: _mobileError,
                         keyboardType: TextInputType.phone,
@@ -325,15 +323,18 @@ class _SignupPageState extends State<SignupPage> {
                     ),
                   ],
                 ),
-
                 const SizedBox(height: 20),
 
                 buildCustomTextField(
                   _passwordController,
                   _fieldKeys['password'],
+                  'Password*',
                   'Password',
                   obscureText: _obscurePassword,
-                  errorText: _passwordFailures.isNotEmpty ? '' : null,
+                  errorText:
+                      _passwordFailures.isNotEmpty
+                          ? '- ${_passwordFailures.first}'
+                          : null,
                   suffixIconData:
                       _obscurePassword
                           ? Icons.visibility_off
@@ -343,25 +344,24 @@ class _SignupPageState extends State<SignupPage> {
                   },
                   onChanged: (value) {
                     _checkPasswordRequirement(value);
+                    if (_confirmPasswordController.text.trim().isNotEmpty &&
+                        value != _confirmPasswordController.text.trim()) {
+                      setState(() {
+                        _passwordMatchError = true;
+                      });
+                    } else {
+                      setState(() {
+                        _passwordMatchError = false;
+                      });
+                    }
                   },
                 ),
-                const SizedBox(height: 2),
-                if (_passwordFailures.isNotEmpty)
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children:
-                        _passwordFailures.map((failure) {
-                          return Text(
-                            '- $failure',
-                            style: const TextStyle(color: Colors.red),
-                          );
-                        }).toList(),
-                  ),
                 const SizedBox(height: 20),
 
                 buildCustomTextField(
                   _confirmPasswordController,
                   _fieldKeys['confirm_password'],
+                  'Confirm Password*',
                   'Confirm Password',
                   obscureText: _obscureConfirmPassword,
                   errorText:
@@ -384,7 +384,7 @@ class _SignupPageState extends State<SignupPage> {
                 ),
                 const SizedBox(height: 20),
 
-                buildText('Address'),
+                buildText('Address', fontSize: 18),
                 const SizedBox(height: 20),
 
                 Row(
@@ -393,13 +393,14 @@ class _SignupPageState extends State<SignupPage> {
                       child: buildCustomDropdown(
                         _fieldKeys['country'],
                         selectedCountry,
+                        'Country*',
+                        'Country',
                         countries.map((country) {
                           return DropdownMenuItem<String>(
                             value: country,
                             child: Text(country),
                           );
                         }).toList(),
-                        'Country',
                         (value) async {
                           setState(() {
                             selectedCountry = value;
@@ -413,13 +414,14 @@ class _SignupPageState extends State<SignupPage> {
                       child: buildCustomDropdown(
                         _fieldKeys['state'],
                         selectedState,
+                        'State*',
+                        'State',
                         states.map((state) {
                           return DropdownMenuItem<String>(
                             value: state,
                             child: Text(state),
                           );
                         }).toList(),
-                        'State',
                         (value) async {
                           setState(() {
                             selectedState = value;
@@ -436,13 +438,14 @@ class _SignupPageState extends State<SignupPage> {
                       child: buildCustomDropdown(
                         _fieldKeys['city'],
                         selectedCity,
+                        'City*',
+                        'City',
                         cities.map((city) {
                           return DropdownMenuItem<String>(
                             value: city,
                             child: Text(city),
                           );
                         }).toList(),
-                        'City',
                         (value) {
                           setState(() {
                             selectedCity = value;
@@ -450,12 +453,13 @@ class _SignupPageState extends State<SignupPage> {
                         },
                       ),
                     ),
-                    const SizedBox(height: 20),
                   ],
                 ),
+                const SizedBox(height: 20),
                 buildCustomTextField(
                   _houseController,
                   _fieldKeys['house'],
+                  'House/Flat No.*',
                   'House/Flat No.',
                 ),
                 const SizedBox(height: 20),
@@ -463,6 +467,7 @@ class _SignupPageState extends State<SignupPage> {
                 buildCustomTextField(
                   _landmarkController,
                   _fieldKeys['landmark'],
+                  'Landmark*',
                   'Landmark',
                 ),
                 const SizedBox(height: 20),
@@ -470,15 +475,16 @@ class _SignupPageState extends State<SignupPage> {
                 buildCustomTextField(
                   _pincodeController,
                   _fieldKeys['pincode'],
+                  'Pincode*',
                   'Pincode',
                   keyboardType: TextInputType.number,
                 ),
-                const SizedBox(height: 40),
+                const SizedBox(height: 30),
 
                 ElevatedButton(
                   onPressed: _submitForm,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue,
+                    backgroundColor: const Color.fromARGB(255, 3, 78, 136),
                     padding: const EdgeInsets.symmetric(
                       horizontal: 50,
                       vertical: 15,
@@ -488,9 +494,17 @@ class _SignupPageState extends State<SignupPage> {
                     ),
                     elevation: 5,
                   ),
-                  child: const Text(
-                    'Create Account',
-                    style: TextStyle(fontSize: 16, color: Colors.white),
+                  child: Center(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 10,
+                      ),
+                      child: const Text(
+                        'Create Account',
+                        style: TextStyle(fontSize: 16, color: Colors.white),
+                      ),
+                    ),
                   ),
                 ),
               ],
